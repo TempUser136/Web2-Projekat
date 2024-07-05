@@ -1,0 +1,20 @@
+.forma{
+    margin: 5px;
+    display: flex;
+    flex-direction: column;
+
+}
+input{
+    height: 25px;
+    margin-bottom: 10px;
+    border-radius: 2px;
+
+}
+.SignUpBg{
+    width: 15%;
+    border-radius: 1px;
+    background-color: white;
+}
+label{
+    color: black;
+}
