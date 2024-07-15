@@ -13,7 +13,6 @@ using Microsoft.ServiceFabric.Services.Runtime;
 using Microsoft.ServiceFabric.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
-
 using Microsoft.Extensions.Options;
 using AutoMapper;
 using API.Mapping;
@@ -21,7 +20,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Configuration;
 using API.Infrastructure;
 using Common.Infrastructure;
-
 
 namespace API
 {
@@ -54,7 +52,6 @@ namespace API
                         });
 
                         //Baza
-
                         builder.Services.AddDbContext<FacultyDbContext>(options =>
                             options.UseOracle(configuration.GetConnectionString("DefaultConnection")));
 
@@ -66,8 +63,8 @@ namespace API
 
                         IMapper mapper = mapperConfig.CreateMapper();
                         builder.Services.AddSingleton(mapper);
-                        //
                         builder.Services.AddSingleton<StatelessServiceContext>(serviceContext);
+
                         builder.WebHost
                             .UseKestrel()
                             .UseContentRoot(Directory.GetCurrentDirectory())

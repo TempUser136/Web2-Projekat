@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-
+import Ride from "../Models/Ride";
 function AddressForm() {
   const [startAddress, setStartAddress] = useState('');
   const [destination, setDestination] = useState('');
@@ -10,11 +10,9 @@ function AddressForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://localhost:7280/api/users/calculate', {
+      const response = await axios.get('http://localhost:8613/Ride/Calculate', {
         startAddress,
         destination
-      }, {
-        withCredentials: true // Include credentials in the request
       });
 
       console.log('Response data:', response.data); // Log the response data
@@ -29,8 +27,17 @@ function AddressForm() {
   };
 
   const handleAccept = async () => {
+    const ride = new Ride(
+      startAddress,
+      destination,
+      result.waitTime,
+      result.price,
+      "available"
+    );
+
     try {
-      await axios.post('https://localhost:7280/api/rides/addRide', {
+
+      await axios.post('http://localhost:8613/ride/AddRide', {
         startAddress,
         destination,
         price: result.price,
@@ -65,6 +72,7 @@ function AddressForm() {
           <label>Start Address:</label>
           <input
             type="text"
+            name="Start"
             value={startAddress}
             onChange={(e) => setStartAddress(e.target.value)}
             required
@@ -74,6 +82,7 @@ function AddressForm() {
           <label>Destination:</label>
           <input
             type="text"
+            name="Destination"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             required

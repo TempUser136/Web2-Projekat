@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 
@@ -17,6 +18,28 @@ namespace API.Controllers
                 );
             var serviceName = await statelessProxy.GetService();
             return serviceName;
+        }
+
+        [HttpGet]
+        [Route("Calculate")]
+        public async Task<PriceWaitResponse> Calculate()
+        {
+            var statelessProxy = ServiceProxy.Create<IStatelessInterface>(
+                new Uri("fabric:/TaxiApp/RideService")
+                );
+            var TimeAndPrice = await statelessProxy.Calculate();
+            return TimeAndPrice;
+        }
+
+        [HttpPost]
+        [Route("AddRide")]
+        public async Task<String> AddRide(Ride ride)
+        {
+            var statelessProxy = ServiceProxy.Create<IStatelessInterface>(
+                new Uri("fabric:/TaxiApp/RideService")
+                );
+            var TimeAndPrice = await statelessProxy.CreateRide(ride);
+            return "TimeAndPrice";
         }
 
     }

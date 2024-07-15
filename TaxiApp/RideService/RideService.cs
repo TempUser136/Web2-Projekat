@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using Common.Models;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
@@ -25,6 +26,20 @@ namespace RideService
             return this.Context.ServiceName.ToString();
         }
 
+        public async Task<PriceWaitResponse> Calculate()
+        {
+            Random rnd = new Random();
+            int time= rnd.Next(1, 45);
+            int price = rnd.Next(1, 1300);
+            PriceWaitResponse response = new PriceWaitResponse();
+            response.Price = price; 
+            response.WaitTime= time;
+            return response;
+        }
+        public Task<bool> CreateRide(Ride ride)
+        {
+            throw new NotImplementedException();
+        }
         /// <summary>
         /// Optional override to create listeners (e.g., TCP, HTTP) for this service replica to handle client or user requests.
         /// </summary>
@@ -54,5 +69,7 @@ namespace RideService
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }
+
+        
     }
 }
