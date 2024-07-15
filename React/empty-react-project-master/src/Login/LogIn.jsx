@@ -19,16 +19,33 @@ function Login() {
     );
 
     try {
-      const response = await axios.get('http://localhost:8613/Ride/statefull');
-      const token = response.data;
-      localStorage.setItem('token', token);
+      const response = await axios.post(`http://localhost:8613/user/Login/${1}`, login);
+      const user = response.data;
+      //localStorage.setItem('token', token);
+      const imageBase64 = await getBase64String(user.imageBytes);
+
+    // Save user data and image to localStorage
+    const userWithBase64Image = { ...user, imageBase64 };
+    localStorage.setItem('user', JSON.stringify(userWithBase64Image));
+
       console.log('User logged in:', response.data);
+      console.log('Storage:', localStorage.getItem('user'));
       navigate('/Home');
     } catch (error) {
       console.error('Error logging in:', error);
     }
   };
 
+// Helper function to convert byte array to Base64 string
+const getBase64String = async (byteArray) => {
+  const blob = new Blob([byteArray], { type: 'image/jpeg' }); // Change MIME type if needed
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+};
 
   return (
     <div class="SignUpBg" >

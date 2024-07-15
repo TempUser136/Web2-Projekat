@@ -29,7 +29,7 @@ namespace API.Controllers
             try
             {
                 // Define the path where the image will be saved
-                var imagePath = Path.Combine("D:\\faks\\Web\\TaxiApp\\Common\\uploads", formModel.Image.FileName);
+                var imagePath = Path.Combine("D:\\faks\\Web\\Web2\\TaxiApp\\Common\\uploads", formModel.Image.FileName);
 
                 // Ensure the directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
@@ -64,6 +64,21 @@ namespace API.Controllers
                 return StatusCode(500, "Internal server error. Please try again later.");
             }
         }
+        [HttpPost]
+        [Route("Login/{id}")]
+        public async Task<ActionResult<User>> Login(int id, [FromBody] LoginModel Login)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+            );
+            var user = await statefullProxy.LogUserAsync(Login);
+            if (user != null)
+            {
+                return Ok(user);
+            }
+            return NotFound();
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
@@ -73,7 +88,7 @@ namespace API.Controllers
                 new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
                 );
             var user = await statefullProxy.GetUserAsync(id);
-            if(user != null)
+            if (user != null)
             {
                 return Ok(user);
             }

@@ -92,6 +92,24 @@ namespace UserService
             }
         }
 
+        public async Task<UserDto> LogUserAsync(LoginModel Login)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                List<UserDto> users = new List<UserDto>();
+                users = await dbContext.Users.ToListAsync();
+                foreach (var item in users)
+                {
+                    if(item.Username == Login.Username && item.Password== Login.Password)
+                    {
+                        return item;
+                    }
+                }
+                return null;
+            }
+        }
+
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
             return this.CreateServiceRemotingReplicaListeners();

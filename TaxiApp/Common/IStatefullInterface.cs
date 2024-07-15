@@ -17,5 +17,7 @@ namespace Common
 
         Task<UserDto> GetUserAsync(int id);
 
+        Task<UserDto> LogUserAsync(LoginModel Login);
+
     }
 }
