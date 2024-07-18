@@ -51,10 +51,11 @@ namespace API
                                     .AllowAnyMethod());
                         });
 
-                        //Baza
+                        //Baze
                         builder.Services.AddDbContext<FacultyDbContext>(options =>
                             options.UseOracle(configuration.GetConnectionString("DefaultConnection")));
-
+                        builder.Services.AddDbContext<RideDbContext>(options =>
+                            options.UseOracle(configuration.GetConnectionString("RideConnection")));
                         //Mapping
                         var mapperConfig = new MapperConfiguration(mc =>
                         {

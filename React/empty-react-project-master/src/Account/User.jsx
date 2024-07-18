@@ -43,8 +43,6 @@ function AddressForm() {
         price: result.price,
         waitTime: result.waitTime,
         status: "Available"
-      }, {
-        withCredentials: true // Include credentials in the request
       });
 
       alert('You have accepted the ride!');

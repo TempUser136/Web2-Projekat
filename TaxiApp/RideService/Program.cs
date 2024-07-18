@@ -3,6 +3,10 @@ using System.Diagnostics;
 using System.Fabric;
 using System.Threading;
 using System.Threading.Tasks;
+using API.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.ServiceFabric.Services.Runtime;
 
 namespace RideService
@@ -16,13 +20,11 @@ namespace RideService
         {
             try
             {
-                // The ServiceManifest.XML file defines one or more service type names.
-                // Registering a service maps a service type name to a .NET type.
-                // When Service Fabric creates an instance of this service type,
-                // an instance of the class is created in this host process.
-
+                var host = CreateHostBuilder().Build();
+                var serviceProvider = host.Services;
+                // Register the service with the Service Fabric runtime, passing the IServiceProvider
                 ServiceRuntime.RegisterServiceAsync("RideServiceType",
-                    context => new RideService(context)).GetAwaiter().GetResult();
+                    context => new RideService(context, serviceProvider)).GetAwaiter().GetResult();
 
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(RideService).Name);
 
@@ -35,5 +37,16 @@ namespace RideService
                 throw;
             }
         }
+        private static IHostBuilder CreateHostBuilder() =>
+          Host.CreateDefaultBuilder()
+              .ConfigureServices((context, services) =>
+              {
+                  // Register DbContext and other services
+                  services.AddDbContext<RideDbContext>(options =>
+                      options.UseOracle("User Id=sys;Password=123;Data Source=localhost:1521/xe;DBA Privilege=SYSDBA;"));
+
+                  // Register other services here
+              });
+
     }
 }
