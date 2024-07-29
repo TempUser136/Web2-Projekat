@@ -15,10 +15,9 @@ namespace API.Infrastructure
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Specify primary key using Fluent API
+            // Specify primary key using Fluent APImodelBuilder.Entity<UserDto>()
             modelBuilder.Entity<RideDto>()
-                .HasKey(ride => new { ride.Id });
-            // Configure your entities here
+                .HasKey(ur => new { ur.Id });
         }
     }
 

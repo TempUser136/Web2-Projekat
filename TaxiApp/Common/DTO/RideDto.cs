@@ -8,8 +8,7 @@ namespace Common.DTO
 {
     public class RideDto
     {
-        public int Id { get; set; } // Auto-incrementing primary key
-
+        public int Id { get; set; } 
         public string StartAddress { get; set; }
         public string Destination { get; set; }
         public decimal Price { get; set; }

@@ -60,7 +60,6 @@ namespace RideService
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
 
-
                     dbContext.Rides.Add(rideSave);
                     await dbContext.SaveChangesAsync();
                     identificator++;
