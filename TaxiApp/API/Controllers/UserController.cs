@@ -29,7 +29,7 @@ namespace API.Controllers
             try
             {
                 // Define the path where the image will be saved
-                var imagePath = Path.Combine("D:\\faks\\Web\\Web2\\TaxiApp\\Common\\uploads", formModel.Image.FileName);
+                var imagePath = Path.Combine("E:\\WebProjekat\\TaxiApp\\Common\\uploads", formModel.Image.FileName);
 
                 // Ensure the directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
@@ -95,7 +95,31 @@ namespace API.Controllers
             return NotFound();
         }
 
-       
+        [HttpGet("GetDrivers")]
+        public async Task<ActionResult<User>> GetDrivers([FromQuery] int id)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+                );
+            List<UserDto> user = new List<UserDto>();
+            try
+            {
+                user = await statefullProxy.GetUserStatusAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Error calling GetUserStatusAsync: {ex.Message}");
+                // Additional logging if needed
+                Console.WriteLine(ex.StackTrace);
+            }
+            if (user.Count >0)
+            {
+                return Ok(user);
+            }
+            return NotFound();
+        }
 
     }
 }

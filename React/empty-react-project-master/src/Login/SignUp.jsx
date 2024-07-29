@@ -9,7 +9,7 @@ function SignUp() {
 
   const handleLogin = async (username, password) => {
     try {
-      const response = await axios.post('https://localhost:7280/api/users/login', { username, password });
+      const response = await axios.post('http://localhost:7280/api/users/login', { username, password });
       setToken(response.data.token);
       localStorage.setItem('token', token); // Store the token in localStorage
 

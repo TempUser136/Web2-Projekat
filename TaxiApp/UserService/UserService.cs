@@ -63,21 +63,43 @@ namespace UserService
                 Name = formModel.Name,
                 Image = imageBytes
             };
-            try
+            if (user.Type == "Driver")
             {
-                using (var scope = _serviceProvider.CreateScope())
+                var status = new UserStatusDto
                 {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
-
-                    dbContext.Users.Add(user);
-                    await dbContext.SaveChangesAsync();
+                    Username = user.Username,
+                    Status = "Waiting"
+                };
+                try
+                {
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                        dbContext.UserStatus.Add(status);
+                        await dbContext.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.ServiceMessage(this.Context, "Error saving user to database: " + ex.Message);
+                    throw;
                 }
             }
-            catch (Exception ex)
-            {
-                ServiceEventSource.Current.ServiceMessage(this.Context, "Error saving user to database: " + ex.Message);
-                throw;
-            }
+                try
+                {
+                    using (var scope = _serviceProvider.CreateScope())
+                    {
+                        var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+
+                        dbContext.Users.Add(user);
+                        await dbContext.SaveChangesAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.ServiceMessage(this.Context, "Error saving user to database: " + ex.Message);
+                    throw;
+                }
 
             return user;
         }
@@ -89,6 +111,32 @@ namespace UserService
                 var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
 
                 return await dbContext.Users.FindAsync(id);
+            }
+        }
+        public async Task<List<UserDto>> GetUserStatusAsync()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+
+                List<UserStatusDto> users = new List<UserStatusDto>();
+                users = await dbContext.UserStatus.ToListAsync();
+
+                List<UserDto> AllUsers = new List<UserDto>();
+                AllUsers = await dbContext.Users.ToListAsync();
+
+                List<UserDto> usersToReturn = new List<UserDto>();
+                foreach (var user in users) {
+                    foreach(var u in AllUsers)
+                    {
+                        if(user.Username == u.Username)
+                        {
+                            usersToReturn.Add(u);
+                        }
+                    }
+                }
+
+                return usersToReturn;
             }
         }
 

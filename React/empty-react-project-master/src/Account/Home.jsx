@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import UserAcc from '../Account/User';
 import Driver from '../Account/Driver';
+import Administrator from './Admin';
 
 function Home() {
   const [user, setUser] = useState(null);
@@ -45,6 +46,9 @@ function Home() {
     return <Driver />;
   }
 
+  if (user.type === "Administrator") {
+    return <Administrator />;
+  }
   return (
     <div>
       <h1>Profile</h1>

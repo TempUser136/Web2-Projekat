@@ -19,6 +19,7 @@ namespace Common
 
         Task<UserDto> LogUserAsync(LoginModel Login);
 
+        Task<List<UserDto>> GetUserStatusAsync();
 
     }
 }

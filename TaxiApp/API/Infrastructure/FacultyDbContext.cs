@@ -9,6 +9,8 @@ namespace API.Infrastructure
     public class FacultyDbContext : DbContext
     {
         public DbSet<UserDto> Users { get; set; }
+        public DbSet<UserStatusDto> UserStatus { get; set; } // Add this line
+
         public FacultyDbContext(DbContextOptions options) : base(options)
         {
 
@@ -18,6 +20,9 @@ namespace API.Infrastructure
             // Specify composite primary key using Fluent API
             modelBuilder.Entity<UserDto>()
                 .HasKey(ur => new { ur.Username});
+
+            modelBuilder.Entity<UserStatusDto>()
+                .HasKey(us => us.Username); // Username as primary key
 
             // Configure other properties and relationships if necessary
         }
