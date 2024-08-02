@@ -8,6 +8,7 @@ using API.Infrastructure;
 using Common;
 using Common.DTO;
 using Common.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Remoting.Runtime;
@@ -43,6 +44,39 @@ namespace RideService
             response.WaitTime= time;
             return response;
         }
+        public async Task<List<RideDto>> GetUserRides(string username)
+        {
+            List<RideDto> userRides = new List<RideDto>();
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
+                List<RideDto> rides = new List<RideDto>();
+                
+                rides = await dbContext.Rides.ToListAsync();
+                foreach (var ride in rides)
+                {
+                    if (ride.Username == username)
+                    {
+                        userRides.Add(ride);
+                    }
+                }
+
+            }
+                return userRides;
+        }
+        public async Task<List<RideDto>> GetAllRides()
+        {
+            List<RideDto> rides = new List<RideDto>();
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
+                
+
+                rides = await dbContext.Rides.ToListAsync();
+
+            }
+            return rides;
+        }
         public async Task<bool> CreateRide(Ride ride)
         {
             var rideSave = new RideDto
@@ -52,14 +86,21 @@ namespace RideService
                 Destination = ride.Destination,
                 Price = ride.Price,
                 WaitTime = ride.WaitTime,
-                Status = ride.Status
+                Status = ride.Status,
+                Username = ride.Username
             };
             try
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
-
+                    List<RideDto> rides = new List<RideDto>();
+                    rides= await dbContext.Rides.ToListAsync();
+                    if (rides.Count > 0)
+                    {
+                        identificator = rides.Last().Id+1;
+                    }
+                    
                     dbContext.Rides.Add(rideSave);
                     await dbContext.SaveChangesAsync();
                     identificator++;

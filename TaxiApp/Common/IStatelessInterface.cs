@@ -14,5 +14,8 @@ namespace Common
         Task<String> GetService();
         Task<PriceWaitResponse> Calculate();
         Task<bool> CreateRide(Ride ride);
+        Task<List<RideDto>> GetUserRides(String username);
+
+        Task<List<RideDto>> GetAllRides();
     }
 }

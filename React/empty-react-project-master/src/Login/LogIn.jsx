@@ -30,6 +30,9 @@ function Login() {
 
       console.log('User logged in:', response.data);
       console.log('Storage:', localStorage.getItem('user'));
+
+      
+
       navigate('/Home');
     } catch (error) {
       console.error('Error logging in:', error);

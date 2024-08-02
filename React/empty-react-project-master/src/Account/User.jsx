@@ -36,13 +36,15 @@ function AddressForm() {
     );
 
     try {
-
+      const storedUser = JSON.parse(localStorage.getItem('user'));   
+    console.log("dasgdgasdga",storedUser.username);
       await axios.post('http://localhost:8613/ride/AddRide', {
-        startAddress,
-        destination,
-        price: result.price,
-        waitTime: result.waitTime,
-        status: "Available"
+      startAddress,
+      destination,
+      price: result.price,
+      waitTime: result.waitTime,
+      status: "Available",
+      username: storedUser.username
       });
 
       alert('You have accepted the ride!');

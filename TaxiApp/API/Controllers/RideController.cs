@@ -1,4 +1,5 @@
 ﻿using Common;
+using Common.DTO;
 using Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
@@ -29,6 +30,28 @@ namespace API.Controllers
                 );
             var TimeAndPrice = await statelessProxy.Calculate();
             return TimeAndPrice;
+        }
+
+        [HttpGet]
+        [Route("GetUserRides")]
+        public async Task<List<RideDto>> GetUserRides([FromQuery] String username)
+        {
+            var statelessProxy = ServiceProxy.Create<IStatelessInterface>(
+                new Uri("fabric:/TaxiApp/RideService")
+                );
+            List<RideDto> rides = await statelessProxy.GetUserRides(username);
+            return rides;
+        }
+
+        [HttpGet]
+        [Route("GetAllRides")]
+        public async Task<List<RideDto>> GetAllRides()
+        {
+            var statelessProxy = ServiceProxy.Create<IStatelessInterface>(
+                new Uri("fabric:/TaxiApp/RideService")
+                );
+            List<RideDto> rides = await statelessProxy.GetAllRides();
+            return rides;
         }
 
         [HttpPost]
