@@ -65,5 +65,16 @@ namespace API.Controllers
             return "TimeAndPrice";
         }
 
+        [HttpPost]
+        [Route("UpdateRideStatus")]
+        public async Task<String> UpdateRideStatus([FromBody] RideUpdateDto update)
+        {
+            var statelessProxy = ServiceProxy.Create<IStatelessInterface>(
+                new Uri("fabric:/TaxiApp/RideService")
+                );
+            var TimeAndPrice = await statelessProxy.UpdateRideStatus(update);
+            return "Updated!";
+        }
+
     }
 }

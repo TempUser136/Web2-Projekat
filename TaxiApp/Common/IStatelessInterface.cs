@@ -17,5 +17,6 @@ namespace Common
         Task<List<RideDto>> GetUserRides(String username);
 
         Task<List<RideDto>> GetAllRides();
+        Task<String> UpdateRideStatus(RideUpdateDto update);
     }
 }

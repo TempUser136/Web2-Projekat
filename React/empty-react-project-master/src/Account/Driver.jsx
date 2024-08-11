@@ -5,12 +5,11 @@ function Driver() {
   const [rides, setRides] = useState([]);
   const [error, setError] = useState(null);
 
+  // Fetch rides when the component mounts
   useEffect(() => {
     const fetchRides = async () => {
       try {
-        const response = await axios.get('https://localhost:7280/api/rides/available', {
-          withCredentials: true // Include credentials in the request
-        });
+        const response = await axios.get('http://localhost:8613/ride/GetAllRides');
         console.log('Fetched Rides:', response.data);
 
         if (response.data) {
@@ -29,34 +28,31 @@ function Driver() {
     fetchRides();
   }, []);
 
-  useEffect(() => {
-    console.log('Rides state updated:', rides);
-  }, [rides]);
+  // Update ride status
+  const updateRideStatus = async (id, newStatus) => {
+    const rideUpdateDto = {
+      id: id,  // Ride ID
+      status: newStatus // New status
+    };
 
-  const acceptRide = async (ride) => {
     try {
-      await axios.post('https://localhost:7280/api/rides/updateStatus', {
-        startAddress: ride.startAddress,
-        destination: ride.destination,
-        status: 'in progress'
-      }, {
-        withCredentials: true
-      });
-      setRides(rides.map(r => r.startAddress === ride.startAddress && r.destination === ride.destination ? { ...r, status: 'in progress' } : r));
+      await axios.post('http://localhost:8613/ride/UpdateRideStatus', rideUpdateDto);
+      
+      // Update the status locally in the state
+      setRides(rides.map(ride => 
+        ride.id === id ? { ...ride, status: newStatus } : ride
+      ));
 
-      // Set a timer to update the ride status to "done" after the wait time
-      setTimeout(async () => {
-        await axios.post('https://localhost:7280/api/rides/updateStatus', {
-          startAddress: ride.startAddress,
-          destination: ride.destination,
-          status: 'done'
-        }, {
-          withCredentials: true
-        });
-        setRides(rides.map(r => r.startAddress === ride.startAddress && r.destination === ride.destination ? { ...r, status: 'done' } : r));
-      }, ride.waitTime * 60000); // Convert minutes to milliseconds
+      if (newStatus === 'in progress') {
+        const ride = rides.find(ride => ride.id === id);
+        
+        // Set a timer to update the ride status to "done" after the wait time
+        setTimeout(async () => {
+          await updateRideStatus(id, 'done');
+        }, ride.waitTime * 60000); // Convert minutes to milliseconds
+      }
     } catch (err) {
-      console.error('There was an error accepting the ride.', err);
+      console.error('There was an error updating the ride status.', err);
     }
   };
 
@@ -72,7 +68,12 @@ function Driver() {
               <p>Destination: {ride.destination}</p>
               <p>Price: ${ride.price}</p>
               <p>Estimated Wait Time: {ride.waitTime} minutes</p>
-              {ride.status === 'available' && <button onClick={() => acceptRide(ride)}>Accept Ride</button>}
+              <p>Status: {ride.status}</p>
+              {ride.status === 'Available' && (
+                <button onClick={() => updateRideStatus(ride.id, 'in progress')}>
+                  Accept Ride
+                </button>
+              )}
               {ride.status === 'in progress' && <p>Ride is in progress...</p>}
               {ride.status === 'done' && <p>Ride is done</p>}
             </li>

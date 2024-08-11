@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import UserAcc from '../Account/User';
 import Administrator from './Admin';
+import Driver from './Driver';
 
 const RidesList = () => {
   const [rides, setRides] = useState([]);
@@ -75,6 +76,11 @@ const RidesList = () => {
   if (user && user.type === "Administrator") {
     return (
       <Administrator />
+    );
+  }
+  if (user && user.type === "Driver") {
+    return (
+      <Driver />
     );
   }
 

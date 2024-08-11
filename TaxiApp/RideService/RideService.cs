@@ -77,6 +77,46 @@ namespace RideService
             }
             return rides;
         }
+        public async Task<String> UpdateRideStatus(RideUpdateDto update)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
+
+                // Find the ride by ID directly
+                var rideToUpdate = await dbContext.Rides.FindAsync(update.Id);
+                if (rideToUpdate == null)
+                {
+                    return "Ride not found";
+                }
+
+                // Update the status
+                rideToUpdate.Status = update.Status;
+
+                dbContext.Rides.Update(rideToUpdate);
+                await dbContext.SaveChangesAsync();
+
+                // Start the background task to update status to 'done' after wait time
+                if(update.Status!= "Done")
+                    _ = Task.Run(() => AcceptRide(rideToUpdate.Id, rideToUpdate.WaitTime));
+            }
+
+            return "Updated";
+        }
+
+        public async Task AcceptRide(int id, int waitTime)
+        {
+            await Task.Delay(TimeSpan.FromMinutes(waitTime));
+
+            RideUpdateDto rideUpdate = new RideUpdateDto()
+            {
+                Id = id,
+                Status = "Done"
+            };
+
+            // Update ride status to 'done'
+            await UpdateRideStatus(rideUpdate);
+        }
         public async Task<bool> CreateRide(Ride ride)
         {
             var rideSave = new RideDto
@@ -100,7 +140,7 @@ namespace RideService
                     {
                         identificator = rides.Last().Id+1;
                     }
-                    
+                    rideSave.Id = identificator;
                     dbContext.Rides.Add(rideSave);
                     await dbContext.SaveChangesAsync();
                     identificator++;
