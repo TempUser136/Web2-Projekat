@@ -1,5 +1,5 @@
 class User {
-    constructor(username, email, password, name, lastName, birthday, address, type, image) {
+    constructor(username, email, password, name, lastName, birthday, address, type, image,token) {
       this.username = username;
       this.email = email;
       this.password = password;
@@ -9,7 +9,7 @@ class User {
       this.address = address;
       this.type = type;
       this.image = image;
-      //this.token = token
+      this.token = token
     }
   }
   

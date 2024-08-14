@@ -14,18 +14,24 @@ using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Configuration;
 
 namespace UserService
 {
     internal sealed class UserService : StatefulService, IStatefullInterface
     {
         private readonly IServiceProvider _serviceProvider;
-
+        private readonly string _secretKey = "ovde_ide_neka_tajna_nasa_koja_mora_biti_kompleksna";
 
         public UserService(StatefulServiceContext context, IServiceProvider serviceProvider)
             : base(context)
         {
             _serviceProvider = serviceProvider;
+            
         }
 
 
@@ -140,23 +146,79 @@ namespace UserService
             }
         }
 
-        public async Task<UserDto> LogUserAsync(LoginModel Login)
+        public async Task<UserWithToken> LogUserAsync(LoginModel login)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
-                List<UserDto> users = new List<UserDto>();
-                users = await dbContext.Users.ToListAsync();
-                foreach (var item in users)
+                var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == login.Username && u.Password == login.Password);
+
+                if (user == null)
                 {
-                    if(item.Username == Login.Username && item.Password== Login.Password)
-                    {
-                        return item;
-                    }
+                    return null; // Invalid username or password
                 }
-                return null;
+
+                // Generate JWT token if user is found and credentials match
+                List<Claim> claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Username)
+        };
+
+                // Add specific claims for roles if needed
+                if (user.Type == "Administrator")
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "admin"));
+                }
+                else if (user.Type == "User")
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "user"));
+                }
+                else if (user.Type == "Driver")
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, "driver"));
+                }
+
+                // Custom claims can be added here
+                // claims.Add(new Claim("CustomClaim", "CustomValue"));
+
+                // Signing credentials (secret key)
+                SymmetricSecurityKey secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+                var signingCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+
+                // Token options
+                var tokenOptions = new JwtSecurityToken(
+                    issuer: "http://localhost:8613",
+                    claims: claims,
+                    expires: DateTime.Now.AddMinutes(20), // Token expiration time
+                    signingCredentials: signingCredentials
+                );
+                try
+                {
+                string tokenString = new JwtSecurityTokenHandler().WriteToken(tokenOptions);
+                UserWithToken uwt = new UserWithToken()
+                {
+                    Username = user.Username,
+                    Password = user.Password,
+                    Type = user.Type,
+                    Address = user.Address,
+                    Birthday = user.Birthday,
+                    Email = user.Email,
+                    Image = user.Image,
+                    LastName = user.LastName,
+                    Name = user.Name,
+                    Token = tokenString
+                };
+                    return uwt; // Return the token as the login response
+                }catch(Exception ex)
+                {
+                    ServiceEventSource.Current.ServiceMessage(this.Context, "Error saving user to database: " + ex.Message);
+                    throw;
+                }
+                
+                
             }
         }
+
         public async Task<UserDto> Calculate(LoginModel Login)
         {
             using (var scope = _serviceProvider.CreateScope())

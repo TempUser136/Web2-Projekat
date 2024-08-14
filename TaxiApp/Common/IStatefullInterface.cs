@@ -17,7 +17,7 @@ namespace Common
 
         Task<UserDto> GetUserAsync(int id);
 
-        Task<UserDto> LogUserAsync(LoginModel Login);
+        Task<UserWithToken> LogUserAsync(LoginModel Login);
 
         Task<List<UserDto>> GetUserStatusAsync();
 

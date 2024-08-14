@@ -12,7 +12,8 @@ const RidesList = () => {
   useEffect(() => {
     const fetchRides = async () => {
       const storedUser = JSON.parse(localStorage.getItem('user'));
-
+      const token = storedUser.token;
+      console.log(token);
       if (!storedUser || !storedUser.username) {
         setError('No user found in local storage.');
         return;
@@ -22,11 +23,14 @@ const RidesList = () => {
         const response = await axios.get('http://localhost:8613/ride/GetUserRides', {
           params: {
             username: storedUser.username
+          },
+          headers: {
+            Authorization: `Bearer ${token}`
           }
         });
         setUser(storedUser);
         
-        console.log("Stored user:", storedUser);
+        console.log("Stored user:", token);
         console.log('Response data:', response.data);
 
         // Ensure the response is an array

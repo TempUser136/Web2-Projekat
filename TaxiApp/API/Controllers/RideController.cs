@@ -1,6 +1,7 @@
 ﻿using Common;
 using Common.DTO;
 using Common.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 
@@ -31,7 +32,7 @@ namespace API.Controllers
             var TimeAndPrice = await statelessProxy.Calculate();
             return TimeAndPrice;
         }
-
+        [Authorize]
         [HttpGet]
         [Route("GetUserRides")]
         public async Task<List<RideDto>> GetUserRides([FromQuery] String username)
