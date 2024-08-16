@@ -67,7 +67,7 @@ const Administrator = () => {
       <ul>
         {drivers.map((driver, index) => (
           <li key={index}>
-            Username: {driver.Username}, Email: {driver.email}
+            Username: {driver.username}, Email: {driver.email}
           </li>
         ))}
       </ul>

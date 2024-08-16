@@ -3,6 +3,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import LoginModel from "../Models/Login";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from 'react-google-login';
+import GoogleLoginButton from "../Components/LoginGoogle";
+
 
 function Login() {
 
@@ -50,6 +53,31 @@ const getBase64String = async (byteArray) => {
   });
 };
 
+const handleGoogleLoginSuccess = async (response) => {
+  console.log('Google Login Success:', response);
+
+  const { profileObj, tokenId } = response;
+
+  try {
+    // You can send the tokenId to your server to verify the user
+    console.log("aaaaaa");
+    const serverResponse = await axios.post('http://localhost:8613/user/google-login', { token: tokenId });
+
+    // Assuming the server responds with user data and a JWT token
+    const { user, token } = serverResponse.data;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    navigate('/Home');
+  } catch (error) {
+    console.error('Google Login Error:', error);
+  }
+};
+
+const handleGoogleLoginFailure = (response) => {
+  console.error('Google Login Failed:', response);
+};
   return (
     <div class="SignUpBg" >
       <label>Sign Up</label>
@@ -58,7 +86,10 @@ const getBase64String = async (byteArray) => {
     <input type="password" name="Password" placeholder="Password" /><br />
     <input type="submit" value="Login" />
   </form>
-    </div>
+    
+
+        <GoogleLoginButton></GoogleLoginButton>
+      </div>
   );
 }
 export default Login;

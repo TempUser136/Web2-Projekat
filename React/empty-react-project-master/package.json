@@ -7,6 +7,7 @@
     "dummy-component": "git+https://github.com/recraftrelic/dummy-react-npm-module.git",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-google-login": "^5.2.2",
     "react-router-dom": "^6.23.1",
     "react-scripts": "3.0.1"
   },
