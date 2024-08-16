@@ -124,6 +124,42 @@ namespace UserService
                 return await dbContext.Users.FindAsync(id);
             }
         }
+
+        public async Task<String> ApproveDriver(string username)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+
+                UserStatusDto user = await dbContext.UserStatus.FirstOrDefaultAsync(u => u.Username == username);
+                dbContext.UserStatus.Remove(user);
+                await dbContext.SaveChangesAsync();
+
+                UserDto userToMail = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+                String mail = userToMail.Email;
+                var emailService = new EmailService("smtp.gmail.com", 587, "mickomitr01@gmail.com", "ccio lmxp kyov mxzp");
+                await emailService.SendEmailAsync("mickomitr01@gmail.com", "Account status", "Your account is approved");
+                return "mail approved";
+
+            }
+        }
+        public async Task<String> DeclineDriver(string username)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+
+                UserStatusDto user = await dbContext.UserStatus.FirstOrDefaultAsync(u => u.Username == username);
+                dbContext.UserStatus.Remove(user);
+                await dbContext.SaveChangesAsync();
+
+                UserDto userToDelete = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+                dbContext.Users.Remove(userToDelete);
+                await dbContext.SaveChangesAsync();
+                return "Driver declined";
+            }
+        }
+
         public async Task<List<UserDto>> GetUserStatusAsync()
         {
             using (var scope = _serviceProvider.CreateScope())

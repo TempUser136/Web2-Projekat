@@ -80,6 +80,33 @@ namespace API.Controllers
             return NotFound();
         }
 
+
+        [HttpPost]
+        [Route("ApproveDriver")]
+        public async Task<String> ApproveDriver([FromQuery] int id,[FromBody] ApproveDto dto)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+            );
+            string nesto = await statefullProxy.ApproveDriver(dto.username);
+
+            return "Nije uspesno menjanje";
+        }
+
+        [HttpPost]
+        [Route("DeclineDriver")]
+        public async Task<String> DeclineDriver([FromQuery] int id, [FromBody] ApproveDto dto)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+            );
+            string nesto = await statefullProxy.DeclineDriver(dto.username);
+
+            return "Nije uspesno menjanje";
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
