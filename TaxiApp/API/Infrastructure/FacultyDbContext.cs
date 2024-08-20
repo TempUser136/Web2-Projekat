@@ -10,6 +10,8 @@ namespace API.Infrastructure
     {
         public DbSet<UserDto> Users { get; set; }
         public DbSet<UserStatusDto> UserStatus { get; set; } // Add this line
+        public DbSet<ApproveDto> Banned { get; set; } // Add this line
+
 
         public FacultyDbContext(DbContextOptions options) : base(options)
         {
@@ -22,6 +24,9 @@ namespace API.Infrastructure
                 .HasKey(ur => new { ur.Username});
 
             modelBuilder.Entity<UserStatusDto>()
+                .HasKey(us => us.Username); // Username as primary key
+
+            modelBuilder.Entity<ApproveDto>()
                 .HasKey(us => us.Username); // Username as primary key
 
             // Configure other properties and relationships if necessary

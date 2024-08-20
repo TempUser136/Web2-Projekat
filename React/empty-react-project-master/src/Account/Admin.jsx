@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { fetchDrivers, fetchRides, approveDriver, declineDriver, blockDriver, unblockDriver } from '../api.js';
 
 const Administrator = () => {
   const [drivers, setDrivers] = useState([]);
@@ -7,61 +7,66 @@ const Administrator = () => {
   const [rides, setRides] = useState([]);
 
   useEffect(() => {
-    const fetchDrivers = async () => {
+    const getDriversAndRides = async () => {
       try {
-        const response = await axios.get('http://localhost:8613/user/GetDrivers');
-        console.log(response.data); // Log the response to check the data
-        setDrivers(response.data);
-      } catch (err) {
-        setError('Error fetching drivers');
-      }
-    };
+        const driversData = await fetchDrivers();
+        setDrivers(driversData);
 
-    const fetchRides = async () => {
-      try {
-        const response = await axios.get('http://localhost:8613/ride/GetAllRides');
-
-        // Ensure the response is an array
-        const ridesData = Array.isArray(response.data) ? response.data : [];
-
-        // Set the rides state
+        const ridesData = await fetchRides();
         setRides(ridesData);
       } catch (err) {
-        console.error('Error fetching rides:', err);
-        setError('Error fetching rides');
+        setError(err.message);
       }
     };
 
-    fetchRides();
-    fetchDrivers();
+    getDriversAndRides();
   }, []);
 
-  const approveDriver = async (username) => {
+  const handleApproveDriver = async (username) => {
     try {
-      const response = await axios.post(`http://localhost:8613/user/ApproveDriver`, {
-        username: username // or DriverApprovalDto if required
-      });
-      if (response.status === 200) {
-        // If the driver was successfully approved, update the driver list
+      const success = await approveDriver(username);
+      if (success) {
         setDrivers(drivers.filter(driver => driver.username !== username));
       }
     } catch (err) {
-      console.error('Error approving driver:', err);
-      setError('Error approving driver');
+      setError(err.message);
     }
   };
-  const declineDriver = async (username) => {
+
+  const handleDeclineDriver = async (username) => {
     try {
-      const response = await axios.post(`http://localhost:8613/user/DeclineDriver`, {
-        username: username // or DriverApprovalDto if required
-      });
-      if (response.status === 200) {
-        // If the driver was successfully approved, update the driver list
+      const success = await declineDriver(username);
+      if (success) {
         setDrivers(drivers.filter(driver => driver.username !== username));
       }
     } catch (err) {
-      console.error('Error declineing driver:', err);
-      setError('Error declineing driver');
+      setError(err.message);
+    }
+  };
+
+  const handleBlockDriver = async (username) => {
+    try {
+      const success = await blockDriver(username);
+      if (success) {
+        setDrivers(drivers.map(driver => 
+          driver.username === username ? { ...driver, blocked: true } : driver
+        ));
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleUnblockDriver = async (username) => {
+    try {
+      const success = await unblockDriver(username);
+      if (success) {
+        setDrivers(drivers.map(driver => 
+          driver.username === username ? { ...driver, blocked: false } : driver
+        ));
+      }
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -91,8 +96,10 @@ const Administrator = () => {
           {drivers.map((driver, index) => (
             <li key={index}>
               Username: {driver.username}, Email: {driver.email}
-              <button onClick={() => approveDriver(driver.username)}>Approve</button>
-              <button onClick={() => declineDriver(driver.username)}>Decline</button>
+              <button onClick={() => handleApproveDriver(driver.username)}>Approve</button>
+              <button onClick={() => handleDeclineDriver(driver.username)}>Decline</button>
+              <button onClick={() => handleBlockDriver(driver.username)} disabled={driver.blocked}>Block</button>
+              <button onClick={() => handleUnblockDriver(driver.username)} disabled={!driver.blocked}>Unblock</button>
             </li>
           ))}
         </ul>

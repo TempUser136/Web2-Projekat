@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Common.DTO
 {
-    public class ApproveDto
+    public class Block
     {
-        public string Username { get; set; }
+        public static string username { get; set; }
     }
 }

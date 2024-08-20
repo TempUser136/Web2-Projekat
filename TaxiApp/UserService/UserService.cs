@@ -34,8 +34,86 @@ namespace UserService
             _serviceProvider = serviceProvider;
             
         }
+        public async Task<string> BlockDriver(string username)
+            {
+            ApproveDto banned = new ApproveDto()
+            {
+                Username = username
+            };
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                dbContext.Banned.Add(banned);
+                await dbContext.SaveChangesAsync();
+                return "Korisnik uspesno banovan";
+            }
+        }
+        public async Task<string> UnblockDriver(string username)
+        {
+            ApproveDto unbanned = new ApproveDto()
+            {
+                Username = username
+            };
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                dbContext.Banned.Remove(unbanned);
+                await dbContext.SaveChangesAsync();
+                return "Korisnik uspesno un-banovan";
+            }
+        }
+        public async Task<UserDto> UpdateUserAsync(UserForm formModel)
+            {
+            var imagePath = formModel.ImagePath;
+            byte[] imageBytes;
 
+            // Load the image as byte array
+            try
+            {
+                imageBytes = await System.IO.File.ReadAllBytesAsync(imagePath);
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.ServiceMessage(this.Context, "Error reading image file: " + ex.Message);
+                throw new Exception("Error reading image file.", ex);
+            }
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(formModel.Password);
 
+            var tmpSource = ASCIIEncoding.ASCII.GetBytes(formModel.Password);
+            var tempHash = new MD5CryptoServiceProvider().ComputeHash(tmpSource);
+
+            var user = new UserDto
+            {
+                Username = formModel.Username,
+                Address = formModel.Address,
+                Birthday = formModel.Birthday,
+                LastName = formModel.LastName,
+                Type = formModel.Type,
+                Password = passwordHash,
+                Email = formModel.Email,
+                Name = formModel.Name,
+                Image = imageBytes
+            };
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                var user2 = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+                user2.Address = user.Address;
+                user2.Username = user.Username;
+                user2.LastName = user.LastName;
+                if(user.Birthday != null)
+                user2.Birthday = user.Birthday;
+                user2.Name = user.Name;
+                if(user.Image != null)
+                user2.Image = user.Image;
+                user2.Email = user.Email;
+                user2.Type = user.Type;
+                user2.Password = passwordHash;
+                await dbContext.SaveChangesAsync();
+                return user2;
+            }
+
+            }
         public async Task<string> GetService()
         {
             var serviceName = this.Context.ServiceName.ToString();

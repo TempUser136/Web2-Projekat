@@ -5,6 +5,8 @@ import LoginModel from "../Models/Login";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from 'react-google-login';
 import GoogleLoginButton from "../Components/LoginGoogle";
+import "../Style/style.css";
+import { loginUser, googleLogin } from "../api.js";
 
 
 function Login() {
@@ -22,7 +24,7 @@ function Login() {
     );
 
     try {
-      const response = await axios.post(`http://localhost:8613/user/Login/${1}`, login);
+      const response = await loginUser(login);
       const user = response.data;
       //localStorage.setItem('token', token);
       const imageBase64 = await getBase64String(user.imageBytes);
@@ -61,7 +63,7 @@ const handleGoogleLoginSuccess = async (response) => {
   try {
     // You can send the tokenId to your server to verify the user
     console.log("aaaaaa");
-    const serverResponse = await axios.post('http://localhost:8613/user/google-login', { token: tokenId });
+    const serverResponse = await googleLogin(tokenId);
 
     // Assuming the server responds with user data and a JWT token
     const { user, token } = serverResponse.data;

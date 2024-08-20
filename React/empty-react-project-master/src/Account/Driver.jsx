@@ -1,55 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { fetchRides, updateRideStatus } from '../api.js';
 
 function Driver() {
   const [rides, setRides] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch rides when the component mounts
   useEffect(() => {
-    const fetchRides = async () => {
+    const getRides = async () => {
       try {
-        const response = await axios.get('http://localhost:8613/ride/GetAllRides');
-        console.log('Fetched Rides:', response.data);
-
-        if (response.data) {
-          setRides(response.data);
-        } else {
-          setRides([]);
-        }
-
-        setError(null);
+        const ridesData = await fetchRides();
+        setRides(ridesData);
       } catch (err) {
-        console.error('There was an error fetching the rides.', err);
-        setError('There was an error fetching the rides.');
+        setError(err.message);
       }
     };
 
-    fetchRides();
+    getRides();
   }, []);
 
-  // Update ride status
-  const updateRideStatus = async (id, newStatus) => {
-    const rideUpdateDto = {
-      id: id,  // Ride ID
-      status: newStatus // New status
-    };
-
+  const handleUpdateRideStatus = async (id, newStatus) => {
     try {
-      await axios.post('http://localhost:8613/ride/UpdateRideStatus', rideUpdateDto);
-      
-      // Update the status locally in the state
-      setRides(rides.map(ride => 
-        ride.id === id ? { ...ride, status: newStatus } : ride
-      ));
+      const success = await updateRideStatus(id, newStatus);
+      if (success) {
+        setRides(rides.map(ride => 
+          ride.id === id ? { ...ride, status: newStatus } : ride
+        ));
 
-      if (newStatus === 'in progress') {
-        const ride = rides.find(ride => ride.id === id);
-        
-        // Set a timer to update the ride status to "done" after the wait time
-        setTimeout(async () => {
-          await updateRideStatus(id, 'done');
-        }, ride.waitTime * 60000); // Convert minutes to milliseconds
+        if (newStatus === 'in progress') {
+          const ride = rides.find(ride => ride.id === id);
+          setTimeout(async () => {
+            await handleUpdateRideStatus(id, 'done');
+          }, ride.waitTime * 60000);
+        }
       }
     } catch (err) {
       console.error('There was an error updating the ride status.', err);
@@ -70,7 +52,7 @@ function Driver() {
               <p>Estimated Wait Time: {ride.waitTime} minutes</p>
               <p>Status: {ride.status}</p>
               {ride.status === 'Available' && (
-                <button onClick={() => updateRideStatus(ride.id, 'in progress')}>
+                <button onClick={() => handleUpdateRideStatus(ride.id, 'in progress')}>
                   Accept Ride
                 </button>
               )}

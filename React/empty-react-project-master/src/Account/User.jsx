@@ -1,26 +1,22 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
+import { calculateRide, addRide } from './rideservice.js';
 import Ride from "../Models/Ride";
+
 function AddressForm() {
   const [startAddress, setStartAddress] = useState('');
   const [destination, setDestination] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [isRideAccepted, setIsRideAccepted] = useState(false);
+  const [timer, setTimer] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get('http://localhost:8613/Ride/Calculate', {
-        startAddress,
-        destination
-      });
-
-      console.log('Response data:', response.data); // Log the response data
-
-      setResult(response.data);
+      const rideResult = await calculateRide(startAddress, destination);
+      setResult(rideResult);
       setError(null);
     } catch (err) {
-      console.error('There was an error calculating the price and wait time.', err); // Log the error
       setError('There was an error calculating the price and wait time.');
       setResult(null);
     }
@@ -36,19 +32,23 @@ function AddressForm() {
     );
 
     try {
-      const storedUser = JSON.parse(localStorage.getItem('user'));   
-    console.log("dasgdgasdga",storedUser.username);
-      await axios.post('http://localhost:8613/ride/AddRide', {
-      startAddress,
-      destination,
-      price: result.price,
-      waitTime: result.waitTime,
-      status: "Available",
-      username: storedUser.username
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+
+      await addRide({
+        startAddress,
+        destination,
+        price: result.price,
+        waitTime: result.waitTime,
+        status: "Available",
+        username: storedUser.username
       });
 
       alert('You have accepted the ride!');
-      // Clear the form and result
+      setIsRideAccepted(true);
+
+      const waitTimeInMilliseconds = result.waitTime * 60000;
+      setTimer(waitTimeInMilliseconds);
+
       setStartAddress('');
       setDestination('');
       setResult(null);
@@ -59,15 +59,38 @@ function AddressForm() {
 
   const handleDecline = () => {
     alert('You have declined the ride.');
-    // Clear the form and result
     setStartAddress('');
     setDestination('');
     setResult(null);
   };
 
+  useEffect(() => {
+    if (isRideAccepted && timer !== null) {
+      const countdown = setInterval(() => {
+        setTimer(prevTimer => {
+          if (prevTimer <= 1000) {
+            clearInterval(countdown);
+            setIsRideAccepted(false);
+            setTimer(null);
+            return null;
+          }
+          return prevTimer - 1000;
+        });
+      }, 1000);
+
+      return () => clearInterval(countdown);
+    }
+  }, [isRideAccepted, timer]);
+
+  const formatTime = (milliseconds) => {
+    const minutes = Math.floor(milliseconds / 60000);
+    const seconds = Math.floor((milliseconds % 60000) / 1000);
+    return `${minutes}m ${seconds}s`;
+  };
+
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} disabled={isRideAccepted}>
         <div>
           <label>Start Address:</label>
           <input
@@ -76,6 +99,7 @@ function AddressForm() {
             value={startAddress}
             onChange={(e) => setStartAddress(e.target.value)}
             required
+            disabled={isRideAccepted}
           />
         </div>
         <div>
@@ -86,9 +110,10 @@ function AddressForm() {
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
             required
+            disabled={isRideAccepted}
           />
         </div>
-        <button type="submit">Calculate</button>
+        <button type="submit" disabled={isRideAccepted}>Calculate</button>
       </form>
 
       {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -97,8 +122,14 @@ function AddressForm() {
         <div>
           <p>Price: ${result.price}</p>
           <p>Estimated Wait Time: {result.waitTime} minutes</p>
-          <button onClick={handleAccept}>Accept</button>
-          <button onClick={handleDecline}>Decline</button>
+          <button onClick={handleAccept} disabled={isRideAccepted}>Accept</button>
+          <button onClick={handleDecline} disabled={isRideAccepted}>Decline</button>
+        </div>
+      )}
+
+      {isRideAccepted && timer !== null && (
+        <div>
+          <p>Ride accepted! Please wait for {formatTime(timer)} before performing another action.</p>
         </div>
       )}
     </div>

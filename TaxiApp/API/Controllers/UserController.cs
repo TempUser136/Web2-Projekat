@@ -2,6 +2,7 @@
 using Common.DTO;
 using Common.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.ServiceFabric.Services.Remoting.Client;
 using System.Net.Http;
 
@@ -23,13 +24,56 @@ namespace API.Controllers
         }
 
         [HttpPost]
+        [Route("UpdateUser")]
+        public async Task<IActionResult> UpdateUser(UserFormModel formModel, [FromQuery] int id)
+        {
+            try
+            {
+                // Define the path where the image will be saved
+                var imagePath = Path.Combine("C:\\Projekat\\Projekat\\TaxiApp\\Common\\uploads\\", formModel.Image.FileName);
+
+                // Ensure the directory exists
+                Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
+
+                // Save the image to the specified path
+                using (var stream = new FileStream(imagePath, FileMode.Create))
+                {
+                    await formModel.Image.CopyToAsync(stream);
+                }
+
+                // Create a UserForm object with the path to the saved image
+                UserForm uf = new UserForm(formModel)
+                {
+                    ImagePath = imagePath
+                };
+
+                // Create a Service Fabric proxy to call the stateful service
+                var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                    new Uri("fabric:/TaxiApp/UserService"),
+                    new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+                );
+
+                // Call the CreateUserAsync method on the stateful service
+                var newUser = await statefullProxy.UpdateUserAsync(uf);
+
+                return Ok(newUser);
+            }
+            catch (Exception ex)
+            {
+                // Log the error (consider using a logging framework like Serilog or NLog)
+                Console.WriteLine($"Error: {ex.Message}");
+                return StatusCode(500, "Internal server error. Please try again later.");
+            }
+        }
+
+        [HttpPost]
         [Route("creteUser")]
         public async Task<IActionResult> CreateUser(UserFormModel formModel, [FromQuery] int id)
         {
             try
             {
                 // Define the path where the image will be saved
-                var imagePath = Path.Combine("E:\\WebProjekat\\TaxiApp\\Common\\uploads", formModel.Image.FileName);
+                var imagePath = Path.Combine("C:\\Projekat\\Projekat\\TaxiApp\\Common\\uploads\\", formModel.Image.FileName);
 
                 // Ensure the directory exists
                 Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
@@ -89,9 +133,34 @@ namespace API.Controllers
                 new Uri("fabric:/TaxiApp/UserService"),
                 new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
             );
-            string nesto = await statefullProxy.ApproveDriver(dto.username);
+            string nesto = await statefullProxy.ApproveDriver(dto.Username);
 
             return "Nije uspesno menjanje";
+        }
+
+        [HttpPost]
+        [Route("BlockDriver")]
+        public async Task<String> BlockDriver([FromQuery] int id, [FromBody] ApproveDto dto)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+            );
+            string nesto = await statefullProxy.BlockDriver(dto.Username);
+
+            return "Nije uspesno blokiranje";
+        }
+        [HttpPost]
+        [Route("UnblockDriver")]
+        public async Task<String> UnblockDriver([FromQuery] int id, [FromBody] ApproveDto dto)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+            );
+            string nesto = await statefullProxy.UnblockDriver(dto.Username);
+
+            return "Nije uspesno blokiranje";
         }
 
         [HttpPost]
@@ -102,7 +171,7 @@ namespace API.Controllers
                 new Uri("fabric:/TaxiApp/UserService"),
                 new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
             );
-            string nesto = await statefullProxy.DeclineDriver(dto.username);
+            string nesto = await statefullProxy.DeclineDriver(dto.Username);
 
             return "Nije uspesno menjanje";
         }

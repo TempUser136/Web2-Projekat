@@ -24,5 +24,10 @@ namespace Common
         Task<String> ApproveDriver(string username);
         Task<String> DeclineDriver(string username);
 
+        Task<UserDto> UpdateUserAsync(UserForm uf);
+
+        Task<String> BlockDriver(string username);
+        Task<String> UnblockDriver(string username);
+
     }
 }
