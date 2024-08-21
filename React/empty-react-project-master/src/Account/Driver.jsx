@@ -1,21 +1,42 @@
 import React, { useEffect, useState } from 'react';
-import { fetchRides, updateRideStatus } from '../api.js';
-
+import { fetchRides, updateRideStatus, fetchDriverStatus } from '../api.js';
+import User from "../Models/User";
+import "../Style/driver.css"
 function Driver() {
   const [rides, setRides] = useState([]);
   const [error, setError] = useState(null);
+  const [isBanned, setIsBanned] = useState(false);
 
   useEffect(() => {
-    const getRides = async () => {
+    const getRidesAndStatus = async () => {
       try {
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        const driver = new User(
+          storedUser.username,
+          storedUser.email,
+          storedUser.password,
+          storedUser.name,
+          storedUser.lastname,
+          storedUser.birthad,
+          storedUser.address,
+          storedUser.type,
+          storedUser.image,
+          storedUser.token
+       
+        );
+        // Fetch the rides
         const ridesData = await fetchRides();
         setRides(ridesData);
+
+        // Fetch the driver's status
+        const driverStatus = await fetchDriverStatus(storedUser.username); // Assuming this API exists
+        setIsBanned(driverStatus.isBanned);
       } catch (err) {
         setError(err.message);
       }
     };
 
-    getRides();
+    getRidesAndStatus();
   }, []);
 
   const handleUpdateRideStatus = async (id, newStatus) => {
@@ -52,8 +73,11 @@ function Driver() {
               <p>Estimated Wait Time: {ride.waitTime} minutes</p>
               <p>Status: {ride.status}</p>
               {ride.status === 'Available' && (
-                <button onClick={() => handleUpdateRideStatus(ride.id, 'in progress')}>
-                  Accept Ride
+                <button 
+                  onClick={() => handleUpdateRideStatus(ride.id, 'in progress')}
+                  disabled={isBanned}  // Disable button if the driver is banned
+                >
+                  {isBanned ? 'Banned - Cannot Accept Ride' : 'Accept Ride'}
                 </button>
               )}
               {ride.status === 'in progress' && <p>Ride is in progress...</p>}

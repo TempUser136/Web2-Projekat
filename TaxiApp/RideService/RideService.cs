@@ -136,9 +136,19 @@ namespace RideService
                     var dbContext = scope.ServiceProvider.GetRequiredService<RideDbContext>();
                     List<RideDto> rides = new List<RideDto>();
                     rides= await dbContext.Rides.ToListAsync();
+                    int tempId = 0;
+                    
+
                     if (rides.Count > 0)
                     {
-                        identificator = rides.Last().Id+1;
+                        foreach (RideDto r in rides)
+                        {
+                            if (r.Id > tempId)
+                            {
+                                tempId = r.Id;
+                            }
+                        }
+                        identificator = tempId+1;
                     }
                     rideSave.Id = identificator;
                     dbContext.Rides.Add(rideSave);

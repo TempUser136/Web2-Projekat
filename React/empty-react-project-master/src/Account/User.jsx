@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { calculateRide, addRide } from './rideservice.js';
 import Ride from "../Models/Ride";
-
+import "../Style/user.css"
 function AddressForm() {
   const [startAddress, setStartAddress] = useState('');
   const [destination, setDestination] = useState('');

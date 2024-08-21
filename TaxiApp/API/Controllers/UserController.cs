@@ -214,6 +214,44 @@ namespace API.Controllers
             {
                 return Ok(user);
             }
+            return Ok(user);
+        }
+
+        [HttpGet("GetDriverStatus")]
+        public async Task<ActionResult<Status>> GetDriverStatus([FromQuery] int id, [FromQuery] string username)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+                );
+            Status status = new Status();
+            status = await statefullProxy.GetDriverStatus(username);
+
+            return Ok(status);
+        }
+        [HttpGet("GetUnapproved")]
+        public async Task<ActionResult<User>> GetUnapproved([FromQuery] int id)
+        {
+            var statefullProxy = ServiceProxy.Create<IStatefullInterface>(
+                new Uri("fabric:/TaxiApp/UserService"),
+                new Microsoft.ServiceFabric.Services.Client.ServicePartitionKey(id)
+                );
+            List<UserDto> user = new List<UserDto>();
+            try
+            {
+                user = await statefullProxy.GetUnapprovedDrivers();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details
+                Console.WriteLine($"Error calling GetUserStatusAsync: {ex.Message}");
+                // Additional logging if needed
+                Console.WriteLine(ex.StackTrace);
+            }
+            if (user.Count > 0)
+            {
+                return Ok(user);
+            }
             return NotFound();
         }
 

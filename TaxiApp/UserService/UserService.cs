@@ -20,6 +20,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.Extensions.Configuration;
 using XSystem.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
 
 namespace UserService
 {
@@ -34,8 +35,27 @@ namespace UserService
             _serviceProvider = serviceProvider;
             
         }
-        public async Task<string> BlockDriver(string username)
+        public async Task<Status> GetDriverStatus(string username)
+        {
+            using (var scope = _serviceProvider.CreateScope())
             {
+                Status s = new Status();
+                var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                ApproveDto user = await dbContext.Banned.FirstOrDefaultAsync(u => u.Username == username);
+                if(user != null) {
+                    s.IsBanned= true;
+                    return s;
+                }
+                else
+                {
+                    s.IsBanned = false;
+                    return s;
+                }
+
+            }
+        }
+        public async Task<string> BlockDriver(string username)
+        {
             ApproveDto banned = new ApproveDto()
             {
                 Username = username
@@ -47,6 +67,19 @@ namespace UserService
                 await dbContext.SaveChangesAsync();
                 return "Korisnik uspesno banovan";
             }
+        }
+        public async Task<List<UserDto>> GetUnapprovedDrivers()
+        {
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
+                    List<UserDto> users = new List<UserDto>();
+                    users = await dbContext.Users.ToListAsync();
+                   
+                return users;
+            }
+            
+
         }
         public async Task<string> UnblockDriver(string username)
         {
@@ -271,6 +304,7 @@ namespace UserService
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<FacultyDbContext>();
                 var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == login.Username);
+                var user2 = await dbContext.UserStatus.FirstOrDefaultAsync(u => u.Username == login.Username);
                 try
                 {
 
@@ -282,12 +316,19 @@ namespace UserService
                         {
                             return null; // Invalid username or password
                         }
-
+                        if(user2 != null)
+                        {
+                            if (user.Username == user2.Username)
+                            {
+                                return null;
+                            }
+                        }
+                        
                         // Generate JWT token if user is found and credentials match
                         List<Claim> claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Username)
-                };
+                        {
+                            new Claim(ClaimTypes.Name, user.Username)
+                        };
 
                         // Add specific claims for roles if needed
                         if (user.Type == "Administrator")

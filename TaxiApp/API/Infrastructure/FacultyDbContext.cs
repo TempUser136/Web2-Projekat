@@ -9,8 +9,8 @@ namespace API.Infrastructure
     public class FacultyDbContext : DbContext
     {
         public DbSet<UserDto> Users { get; set; }
-        public DbSet<UserStatusDto> UserStatus { get; set; } // Add this line
-        public DbSet<ApproveDto> Banned { get; set; } // Add this line
+        public DbSet<UserStatusDto> UserStatus { get; set; } 
+        public DbSet<ApproveDto> Banned { get; set; } 
 
 
         public FacultyDbContext(DbContextOptions options) : base(options)

@@ -20,6 +20,25 @@ export const fetchDrivers = async () => {
     throw new Error('Error fetching drivers');
   }
 };
+export const fetchDriverStatus = async (username) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/user/GetDriverStatus`, {
+      params: { username,id:1 }
+    });
+    return response.data;
+  } catch (err) {
+    throw new Error('Error fetching driver status');
+  }
+};
+
+export const fetchUnapproved = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/user/GetUnapproved`);
+    return response.data;
+  } catch (err) {
+    throw new Error('Error fetching drivers');
+  }
+};
 
 // Fetch all rides
 export const fetchRides = async () => {

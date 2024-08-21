@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { fetchDrivers, fetchRides, approveDriver, declineDriver, blockDriver, unblockDriver } from '../api.js';
-
+import { fetchUnapproved, fetchDrivers, fetchRides, approveDriver, declineDriver, blockDriver, unblockDriver } from '../api.js';
+import "../Style/admin.css"
 const Administrator = () => {
-  const [drivers, setDrivers] = useState([]);
+  const [unapprovedDrivers, setUnapprovedDrivers] = useState([]);
+  const [approvedDrivers, setApprovedDrivers] = useState([]);
   const [error, setError] = useState(null);
   const [rides, setRides] = useState([]);
 
   useEffect(() => {
     const getDriversAndRides = async () => {
       try {
+        // Fetch unapproved drivers
         const driversData = await fetchDrivers();
-        setDrivers(driversData);
+        setUnapprovedDrivers(driversData);
 
+        // Fetch all drivers, including those already approved
+        const allDrivers = await fetchUnapproved();
+        // Separate the approved drivers
+        setApprovedDrivers(allDrivers.filter(driver => !driversData.some(unapproved => unapproved.username === driver.username)));
+
+        // Fetch rides
         const ridesData = await fetchRides();
         setRides(ridesData);
       } catch (err) {
@@ -26,7 +34,9 @@ const Administrator = () => {
     try {
       const success = await approveDriver(username);
       if (success) {
-        setDrivers(drivers.filter(driver => driver.username !== username));
+        const updatedDriver = unapprovedDrivers.find(driver => driver.username === username);
+        setUnapprovedDrivers(unapprovedDrivers.filter(driver => driver.username !== username));
+        setApprovedDrivers([...approvedDrivers, updatedDriver]);
       }
     } catch (err) {
       setError(err.message);
@@ -37,7 +47,7 @@ const Administrator = () => {
     try {
       const success = await declineDriver(username);
       if (success) {
-        setDrivers(drivers.filter(driver => driver.username !== username));
+        setUnapprovedDrivers(unapprovedDrivers.filter(driver => driver.username !== username));
       }
     } catch (err) {
       setError(err.message);
@@ -48,7 +58,7 @@ const Administrator = () => {
     try {
       const success = await blockDriver(username);
       if (success) {
-        setDrivers(drivers.map(driver => 
+        setApprovedDrivers(approvedDrivers.map(driver => 
           driver.username === username ? { ...driver, blocked: true } : driver
         ));
       }
@@ -61,7 +71,7 @@ const Administrator = () => {
     try {
       const success = await unblockDriver(username);
       if (success) {
-        setDrivers(drivers.map(driver => 
+        setApprovedDrivers(approvedDrivers.map(driver => 
           driver.username === username ? { ...driver, blocked: false } : driver
         ));
       }
@@ -77,9 +87,9 @@ const Administrator = () => {
   return (
     <>
       <div>
-        <h1>Ride history</h1>
+        <h1>Ride History</h1>
         {rides.length === 0 ? (
-          <p>Admin no rides found.</p>
+          <p>No rides found.</p>
         ) : (
           <ul>
             {rides.map((ride, index) => (
@@ -90,14 +100,26 @@ const Administrator = () => {
           </ul>
         )}
       </div>
+      
       <div>
-        <h1>Driver List</h1>
+        <h1>Unapproved Drivers</h1>
         <ul>
-          {drivers.map((driver, index) => (
+          {unapprovedDrivers.map((driver, index) => (
             <li key={index}>
               Username: {driver.username}, Email: {driver.email}
               <button onClick={() => handleApproveDriver(driver.username)}>Approve</button>
               <button onClick={() => handleDeclineDriver(driver.username)}>Decline</button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h1>All users</h1>
+        <ul>
+          {approvedDrivers.map((driver, index) => (
+            <li key={index}>
+              Username: {driver.username}, Email: {driver.email}
               <button onClick={() => handleBlockDriver(driver.username)} disabled={driver.blocked}>Block</button>
               <button onClick={() => handleUnblockDriver(driver.username)} disabled={!driver.blocked}>Unblock</button>
             </li>

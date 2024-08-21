@@ -21,6 +21,11 @@ namespace Common
 
         Task<List<UserDto>> GetUserStatusAsync();
 
+        Task<List<UserDto>> GetUnapprovedDrivers();
+
+        Task<Status> GetDriverStatus(string username);
+
+
         Task<String> ApproveDriver(string username);
         Task<String> DeclineDriver(string username);
 
